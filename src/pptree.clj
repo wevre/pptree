@@ -21,8 +21,8 @@
 
 (defn get-prefix
   "Return common prefix ending with sep."
-  [a b]
-  (->> (map vector a b)
+  [a b & xs]
+  (->> (apply map vector a b xs)
        (take-while (partial apply =))
        (map first)
        (apply str)
@@ -57,15 +57,15 @@
   "Add str `path` to vec `tree` and return a new tree.
    Paths must be added in sorted order. Uses loop/recur."
   [tree path]
-  (let [chain
-        (loop [[par & _ :as tree] tree pars [] path path]
-          (let [pfx (get-prefix par path) de-path (deprefix path pfx)]
-            (cond
-              (empty? tree) (cons [path] pars)
-              (pos? (compare par pfx)) (cons [pfx (deprefix tree pfx) [de-path]] pars)
-              (= path pfx) (cons tree pars)   ;; Ignore duplicate directories.
-              (or (= 1 (count tree)) (empty? (get-prefix (first (peek tree)) de-path)))
-              (cons (conj tree [de-path]) pars)   ;; Add path as (newest) last child.
-              :else   ;; Add path to (existing) last child.
-              (recur (peek tree) (cons (pop tree) pars) de-path))))]
-    (reduce #(conj %2 %1) chain)))
+  (->> 
+   (loop [[par & _ :as tree] tree pars [] path path]
+     (let [pfx (get-prefix par path) de-path (deprefix path pfx)]
+       (cond
+         (empty? tree) (cons [path] pars)
+         (pos? (compare par pfx)) (cons [pfx (deprefix tree pfx) [de-path]] pars)
+         (= path pfx) (cons tree pars)   ;; Ignore duplicate directories.
+         (or (= 1 (count tree)) (empty? (get-prefix (first (peek tree)) de-path)))
+         (cons (conj tree [de-path]) pars)   ;; Add path as (newest) last child.
+         :else   ;; Add path to (existing) last child.
+         (recur (peek tree) (cons (pop tree) pars) de-path))))
+    (reduce #(conj %2 %1))))
