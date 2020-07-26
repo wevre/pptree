@@ -7,7 +7,7 @@
 ;;    Takes a list of paths and produces a printout similar to *nix `tree`
 ;;    command.
 
-(ns pptree
+(ns wevre.pptree
   (:require [clojure.string :as str]))
 
 (def ^:dynamic *sep* "/")

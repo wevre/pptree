@@ -1,10 +1,10 @@
-(ns test-pptree
-  (:require [pptree]
+(ns wevre.pptree-test
+  (:require [wevre.pptree :as sut]
             [clojure.test :refer [deftest are is testing]]))
 
 (deftest test-split-last
   (are [path head tail]
-       (= (list head tail) (pptree/split-last path))
+       (= (list head tail) (sut/split-last path))
     ""                   ""              ""
     "hello"              ""              "hello"
     "hello/"             "hello/"        ""
@@ -20,7 +20,7 @@
 
 (deftest test-get-prefix
   (are [a b pfx]
-       (= pfx (pptree/get-prefix a b))
+       (= pfx (sut/get-prefix a b))
     ""                     "/hello"               ""
     nil                    "/world"               ""
     nil                    nil                    ""
@@ -32,49 +32,49 @@
 (deftest test-add-path
   (testing "add-path"
     (is (= ["/hello"]
-           (pptree/add-path [] "/hello"))
+           (sut/add-path [] "/hello"))
         "-- empty tree")
     (is (= ["/hello/" ["alfa"] ["bravo"]]
-           (pptree/add-path ["/hello/alfa"] "/hello/bravo"))
+           (sut/add-path ["/hello/alfa"] "/hello/bravo"))
         "-- prefix shorter than parent")
     (is (= ["" ["hello"] ["world"]]
-           (pptree/add-path ["hello"] "world"))
+           (sut/add-path ["hello"] "world"))
         "-- no common prefix")
     (is (= ["/hello/charlie/"]
-           (pptree/add-path ["/hello/charlie/"] "/hello/charlie/"))
+           (sut/add-path ["/hello/charlie/"] "/hello/charlie/"))
         "-- path == prefix (duplicate)")
     (is (= ["/hello/world/" ["delta"]]
-           (pptree/add-path ["/hello/world/"] "/hello/world/delta"))
+           (sut/add-path ["/hello/world/"] "/hello/world/delta"))
         "-- childless tree")
     (is (= ["/hello/" ["alfa"] ["bravo"] ["charlie"]]
-           (pptree/add-path ["/hello/" ["alfa"] ["bravo"]] "/hello/charlie"))
+           (sut/add-path ["/hello/" ["alfa"] ["bravo"]] "/hello/charlie"))
         "-- no common prefix with last child, add as next child")
     (is (= ["/hello/" ["alfa"] ["bravo/" ["charlie"] ["delta"]]]
-           (pptree/add-path ["/hello/" ["alfa"] ["bravo/charlie"]]
+           (sut/add-path ["/hello/" ["alfa"] ["bravo/charlie"]]
                              "/hello/bravo/delta"))
         "-- add to and replace last child")))
 
 (deftest test-add-path*
   (testing "add-path*"
     (is (= ["/hello"]
-           (pptree/add-path* [] "/hello"))
+           (sut/add-path* [] "/hello"))
         "-- empty tree")
     (is (= ["/hello/" ["alfa"] ["bravo"]]
-           (pptree/add-path* ["/hello/alfa"] "/hello/bravo"))
+           (sut/add-path* ["/hello/alfa"] "/hello/bravo"))
         "-- prefix shorter than parent")
     (is (= ["" ["hello"] ["world"]]
-           (pptree/add-path* ["hello"] "world"))
+           (sut/add-path* ["hello"] "world"))
         "-- no common prefix")
     (is (= ["/hello/charlie/"]
-           (pptree/add-path* ["/hello/charlie/"] "/hello/charlie/"))
+           (sut/add-path* ["/hello/charlie/"] "/hello/charlie/"))
         "-- path == prefix (duplicate)")
     (is (= ["/hello/world/" ["delta"]]
-           (pptree/add-path* ["/hello/world/"] "/hello/world/delta"))
+           (sut/add-path* ["/hello/world/"] "/hello/world/delta"))
         "-- childless tree")
     (is (= ["/hello/" ["alfa"] ["bravo"] ["charlie"]]
-           (pptree/add-path* ["/hello/" ["alfa"] ["bravo"]] "/hello/charlie"))
+           (sut/add-path* ["/hello/" ["alfa"] ["bravo"]] "/hello/charlie"))
         "-- no common prefix with last child, add as next child")
     (is (= ["/hello/" ["alfa"] ["bravo/" ["charlie"] ["delta"]]]
-           (pptree/add-path* ["/hello/" ["alfa"] ["bravo/charlie"]]
+           (sut/add-path* ["/hello/" ["alfa"] ["bravo/charlie"]]
                              "/hello/bravo/delta"))
         "-- add to and replace last child")))
