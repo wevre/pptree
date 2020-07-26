@@ -4,7 +4,7 @@
 ;;    
 ;; :section Introduction
 ;; 
-;;    Takes a list of paths and returns a printout similar to *nix `tree`
+;;    Takes a list of paths and produces a printout similar to *nix `tree`
 ;;    command.
 
 (ns pptree
@@ -69,3 +69,36 @@
          :else   ;; Add path to (existing) last child.
          (recur (peek tree) (cons (pop tree) pars) de-path))))
     (reduce #(conj %2 %1))))
+
+(def spa "    ")
+(def bra "│   ")
+(def tee "├── ")
+(def lst "└── ")
+
+(defn dir? [[par & chs]]
+  (or (seq chs) (and par (str/ends-with? par *sep*))))
+
+(defn split-lone-ch
+  "Splits a root-only tree if it is not a directory."
+  [[par & chs :as tree]]
+  (let [[head tail] (split-last par)]
+    (if (and (empty? chs) (seq head) (seq tail)) [head [tail]] tree)))
+
+(defn tree->lines
+  [tree]
+  (letfn [(do-childs
+           [result pfx [ch & chs]]
+           (let [pfx-curr (conj pfx (if (empty? chs) lst tee))
+                 pfx-desc (conj pfx (if (empty? chs) spa bra))]
+             (if ch
+               (do-childs (do-branch result pfx-curr pfx-desc ch) pfx chs)
+               result)))
+          (do-branch
+           [result pfx-par pfx-chs [par & chs]]
+           (->> chs
+                (map split-lone-ch)
+                #_(sort-chs)
+                (do-childs (conj result (conj pfx-par par)) pfx-chs))
+           #_(let [chs (sort-chs (map split-lone-ch chs))]
+               (do-childs (conj result (conj pfx-par par)) pfx-chs chs)))]
+    (when (first tree) (do-branch [] [] [] tree))))
