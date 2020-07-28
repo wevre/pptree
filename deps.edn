@@ -1,1 +1,14 @@
-{:deps {}}
+{:paths ["src" "classes"]
+ :deps {org.clojure/tools.cli {:mvn/version "1.0.194"}
+        org.clojure/algo.monads {:mvn/version "0.1.6"}
+        wevre/natural-compare {:mvn/version "0.0.6"}}
+ :aliases {:test {:extra-paths ["test"]}
+           :run-tests {:extra-paths ["test"]
+                       :extra-deps {com.cognitect/test-runner 
+                                    {:git/url "https://github.com/cognitect-labs/test-runner.git"
+                                     :sha "f7ef16dc3b8332b0d77bc0274578ad5270fbfedd"}}
+                       :main-opts ["-m" "cognitect.test-runner"]}
+           :uberjar {:extra-deps {uberdeps {:mvn/version "0.1.10"}}
+                     :main-opts ["-m uberdeps.uberjar"
+                                 "--target target/pptree.jar"
+                                 "--main-class wevre.pptree.main"]}}}

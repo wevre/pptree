@@ -1,5 +1,5 @@
-(ns wevre.pptree-test
-  (:require [wevre.pptree :as sut]
+(ns wevre.pptree.main-test
+  (:require [wevre.pptree.main :as sut]
             [clojure.test :refer [deftest are is testing]]))
 
 (deftest test-split-last
@@ -78,3 +78,19 @@
            (sut/add-path* ["/hello/" ["alfa"] ["bravo/charlie"]]
                              "/hello/bravo/delta"))
         "-- add to and replace last child")))
+
+(deftest test-tree->lines
+  (testing "tree->lines"
+    (is
+     (= [["/h/"]
+         ["├── " "l/"]
+         ["│   " "├── " "a"]
+         ["│   " "├── " "b"]
+         ["│   " "└── " "c"]
+         ["└── " "w/"]
+         ["    " "├── " "p"]
+         ["    " "├── " "q"]
+         ["    " "└── " "q/"]
+         ["    " "    " "└── " "r"]]
+        (sut/tree->lines
+         ["/h/" ["l/" ["a"] ["b"] ["c"]] ["w/" ["p"] ["q"] ["q/r"]]])))))

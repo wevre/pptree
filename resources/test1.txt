@@ -1,0 +1,6 @@
+/hello/alpha/charlie/file1.txt
+/hello/alpha/charlie/file10.txt
+/hello/alpha/charlie/file2.txt
+/hello/alpha/delta
+/hello/alpha/bravo
+/hello/alpha/Epsilon

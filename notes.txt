@@ -1,0 +1,21 @@
+:project pptree
+   :author Mike Weaver
+   :created 2020-05-23
+
+:section Introduction
+
+   Takes a list of paths from stdin and produces a printout similar to *nix
+   `tree` command. Includes options to control sorting and to specify the path
+   separator.
+
+:section To Do's
+
+   [] (2020-07-27) Use `let-not`
+      Use wevre.let-not in the cli processing.
+
+:section Learnings
+
+   * uberjar needs the main class compiled first, clj -e "(compile
+   wevre.pptree.main)".
+
+   * for clj to compile, the `classes` directory needs to exist.

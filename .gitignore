@@ -1,3 +1,6 @@
-.cpcache
+/.cpcache
+/target
+/classes
 .nrepl-port
-.vscode
+/.calva
+/.vscode
