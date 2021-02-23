@@ -48,7 +48,7 @@
       (empty? tree) [path]
       ; Place par and path as siblings under new parent.
       (pos? (compare par pfx)) [pfx (deprefix tree pfx) [de-path]]
-      ; Ignore duplicate directories
+      ; Ignore duplicate directories.
       (= path pfx) tree
       ; Add path as last child.
       (or (= 1 (count tree)) 

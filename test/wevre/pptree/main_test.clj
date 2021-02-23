@@ -1,6 +1,7 @@
 (ns wevre.pptree.main-test
   (:require [wevre.pptree.main :as sut]
-            [clojure.test :refer [deftest are is testing]]))
+            [clojure.test :refer [deftest are is testing]]
+            [clojure.string :as str]))
 
 (deftest pptree
   (testing "split last"
@@ -65,4 +66,67 @@
          ["    " "└── " "q/"]
          ["    " "    " "└── " "r"]]
         (sut/lines<-tree
-         ["/h/" ["l/" ["a"] ["b"] ["c"]] ["w/" ["p"] ["q"] ["q/r"]]])))))
+         ["/h/" ["l/" ["a"] ["b"] ["c"]] ["w/" ["p"] ["q"] ["q/r"]]]))))
+  
+  (testing "sort DIR first"
+    (let [input ["/hello/alpha/charlie/file2.txt"
+                 "/hello/alpha/charlie/file10.txt"
+                 "/hello/alpha/Epsilon"
+                 "/hello/alpha/delta"
+                 "/hello/alpha/bravo"
+                 "/hello/alpha/charlie/file1.txt"]
+          get-lines (fn [inp] (->> inp
+                                   sort
+                                   (reduce sut/add-path [])
+                                   sut/lines<-tree
+                                   (map str/join)))]
+      (is (= (get-lines input)
+             ["/hello/alpha/"
+              "├── bravo"
+              "├── charlie/"
+              "│   ├── file1.txt"
+              "│   ├── file2.txt"
+              "│   └── file10.txt"
+              "├── delta"
+              "└── Epsilon"])
+          "normal sorting")
+      (is (= (binding [sut/*dirs-first* true] (get-lines input))
+             ["/hello/alpha/"
+              "├── charlie/"
+              "│   ├── file1.txt"
+              "│   ├── file2.txt"
+              "│   └── file10.txt"
+              "├── bravo"
+              "├── delta"
+              "└── Epsilon"])
+          "dir first")
+      (is (= (binding [sut/*dirs-last* true] (get-lines input))
+             ["/hello/alpha/"
+              "├── bravo"
+              "├── delta"
+              "├── Epsilon"
+              "└── charlie/"
+              "    ├── file1.txt"
+              "    ├── file2.txt"
+              "    └── file10.txt"])
+          "dir last")
+      (is (= (binding [sut/*case-sens* true] (get-lines input))
+             ["/hello/alpha/"
+              "├── Epsilon"
+              "├── bravo"
+              "├── charlie/"
+              "│   ├── file1.txt"
+              "│   ├── file2.txt"
+              "│   └── file10.txt"
+              "└── delta"])
+          "case sensitive")
+      (is (= (binding [sut/*lex-sort* true] (get-lines input))
+             ["/hello/alpha/"
+              "├── bravo"
+              "├── charlie/"
+              "│   ├── file1.txt"
+              "│   ├── file10.txt"
+              "│   └── file2.txt"
+              "├── delta"
+              "└── Epsilon"])
+          "lexical sort"))))

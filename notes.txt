@@ -10,8 +10,6 @@
 
 :section ToDo's
 
-   [] Create tests for the various command-line options.
-
 :section Learnings
 
    * uberjar needs the main class compiled first
