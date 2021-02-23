@@ -10,6 +10,13 @@
 
 :section ToDo's
 
+   [] I'm looking at `lines<-tree` and I'm thinking two things: (1) the mutual
+   recursion could probably be "unwound" back to single recursion--sort of what
+   to do that just to see what it would look like and if it would make the code
+   easier to grok at a glance; and, (2) I still want to try for some elegant
+   code using zippers. I've made some stabs at it, but each time, partway
+   through, I started to feel like the code was getting more hairy.
+
 :section Learnings
 
    * uberjar needs the main class compiled first

@@ -2,7 +2,8 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [wevre.pptree.cli :as cli]
-            [wevre.natural-compare :refer [natural-compare]])
+            [wevre.natural-compare :refer [natural-compare]]
+            [clojure.walk :as w])
   (:gen-class))
 
 (def ^:dynamic *sep* "/")
@@ -103,6 +104,30 @@
              (do-childs (conj result (conj pfx-par par)) pfx-chs chs)))]
     (when (first tree) (do-branch [] [] [] tree))))
 
+(defn lines<-tree**
+  ([tree] (lines<-tree** "" "" tree))
+  ([dpfx pfx [par & chs]]
+   (cond
+     (nil? par) ()
+     :else
+     (let [flg-last (concat (repeat (max 0 (dec (count chs))) false) [true])]
+       (cons [dpfx pfx par]
+             (mapcat (fn [c f]
+                    (lines<-tree** (str dpfx (if f spa bra))
+                                   (str dpfx (if f lst tee))
+                                   c))
+                  chs flg-last))))))
+
+(comment
+  (let [input ["/h/l/a" "/h/l/b" "/h/l/c" "/h/w/p" "/h/w/q" "/h/w/q/r"]]
+    (->> input sort (reduce add-path []) 
+         (w/postwalk #(if (vector? %) (split-lone-ch %) %))
+         (lines<-tree**)))
+  (let [input ["/h"] #_["/h/a" "/h/a/b" "/h/a/b/c"]]
+    (->> input sort (reduce add-path []) 
+         (w/postwalk #(if (vector? %) (split-lone-ch %) %))
+         (lines<-tree** ))))
+
 (defn unwrap-quotes [s]
   (if (and (str/starts-with? s "\"") (str/ends-with? s "\""))
     (subs s 1 (max 1 (dec (count s))))
@@ -124,5 +149,5 @@
                          (filter seq)
                          sort
                          (reduce add-path [])
-                         lines<-tree)]
+                         lines<-tree**)]
             (println (str/join x))))))))
