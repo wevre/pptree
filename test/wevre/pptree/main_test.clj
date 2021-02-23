@@ -52,19 +52,25 @@
            (sut/add-path ["/hello/" ["alfa"] ["bravo/charlie"]]
                          "/hello/bravo/delta"))
         "-- add to and replace last child"))
+  
+  (testing "split lone child"
+    (is (= ["/h/"] (sut/split-lone-ch ["/h/"])))
+    (is (= ["/h/q/" ["r"]] (sut/split-lone-ch ["/h/q/r"])))
+    (is (= ["/h/" ["q"]] (sut/split-lone-ch ["/h/" ["q"]])))
+    (is (= ["/h/" ["q"]] (sut/split-lone-ch ["/h/" ["q"]]))))
 
   (testing "lines from tree"
     (is
-     (= [["/h/"]
-         ["├── " "l/"]
-         ["│   " "├── " "a"]
-         ["│   " "├── " "b"]
-         ["│   " "└── " "c"]
-         ["└── " "w/"]
-         ["    " "├── " "p"]
-         ["    " "├── " "q"]
-         ["    " "└── " "q/"]
-         ["    " "    " "└── " "r"]]
+     (= ["/h/"
+         "├── l/"
+         "│   ├── a"
+         "│   ├── b"
+         "│   └── c"
+         "└── w/"
+         "    ├── p"
+         "    ├── q"
+         "    └── q/"
+         "        └── r"]
         (sut/lines<-tree
          ["/h/" ["l/" ["a"] ["b"] ["c"]] ["w/" ["p"] ["q"] ["q/r"]]]))))
   
@@ -75,11 +81,7 @@
                  "/hello/alpha/delta"
                  "/hello/alpha/bravo"
                  "/hello/alpha/charlie/file1.txt"]
-          get-lines (fn [inp] (->> inp
-                                   sort
-                                   (reduce sut/add-path [])
-                                   sut/lines<-tree
-                                   (map str/join)))]
+          get-lines (fn [inp] (sut/lines<-tree (sut/tree<-paths inp)))]
       (is (= (get-lines input)
              ["/hello/alpha/"
               "├── bravo"

@@ -26,8 +26,8 @@
        (take-while (partial apply =))
        (map first)
        (apply str)
-       (split-last)
-       (first)))
+       split-last
+       first))
 
 (defprotocol Prefixed
   "Items (paths or trees) that contain a removable prefix."
@@ -43,7 +43,7 @@
   "Recursively add str `path` to vec `tree` and return new tree vector.
    Paths must be added in sorted order."
   [[par & _ :as tree] path]
-  (let [pfx (common-prefix par path) de-path (deprefix path pfx)]
+  (let [pfx (common-prefix par path), de-path (deprefix path pfx)]
     (cond
       ; Initialize empty tree.
       (empty? tree) [path]
@@ -74,7 +74,7 @@
   (let [filter-ci (fn [ch] (if *case-sens* ch (update ch 0 str/lower-case)))
         dir-sorter
         (fn [dpre fpre]
-          (fn [ch] (update ch 0 #(str/join [(if (dir? ch) dpre fpre) %]))))
+          (fn [ch] (update ch 0 #(str (if (dir? ch) dpre fpre) %))))
         sort-dir (cond
                    *dirs-first* (dir-sorter "0" "1")
                    *dirs-last* (dir-sorter "1" "0")
@@ -84,49 +84,48 @@
              chs)))
 
 (defn split-lone-ch
-  "Splits a root-only tree if it is not a directory."
+  "Splits root-only tree if not a directory."
   [[par & chs :as tree]]
   (let [[head tail] (split-last par)]
     (if (and (empty? chs) (seq head) (seq tail)) [head [tail]] tree)))
 
+(defn unwind-prefix [[s p & d]]
+  (str (str/join (map #(if % spa bra) (reverse d))) 
+       (when-not (nil? p) (if p lst tee)) 
+       s))
+
+(defn get-prefixes
+  "Transforms nested vector tree into list of paths+prefixes flags.
+   Prefixes are in reverse order (built up with `conj`) and have to be reversed
+   when unwound."
+  [stack [par & chs]]
+  (when par
+    (let [last? (fn [i] (= i (dec (count chs))))]
+      (cons (conj stack par)
+            (mapcat (fn [c i] (get-prefixes (conj stack (last? i)) c)) 
+                    (sort-chs chs)
+                    (range))))))
+
 (defn lines<-tree
   [tree]
-  (letfn [(do-childs
-           [result pfx [ch & chs]]
-           (let [pfx-curr (conj pfx (if (empty? chs) lst tee))
-                 pfx-desc (conj pfx (if (empty? chs) spa bra))]
-             (cond
-               (nil? ch) result
-               :else (do-childs (do-branch result pfx-curr pfx-desc ch) pfx chs))))
-          (do-branch
-           [result pfx-par pfx-chs [par & chs]]
-           (let [chs (sort-chs (map split-lone-ch chs))]
-             (do-childs (conj result (conj pfx-par par)) pfx-chs chs)))]
-    (when (first tree) (do-branch [] [] [] tree))))
-
-(defn lines<-tree**
-  ([tree] (lines<-tree** "" "" tree))
-  ([dpfx pfx [par & chs]]
-   (cond
-     (nil? par) ()
-     :else
-     (let [flg-last (concat (repeat (max 0 (dec (count chs))) false) [true])]
-       (cons [dpfx pfx par]
-             (mapcat (fn [c f]
-                    (lines<-tree** (str dpfx (if f spa bra))
-                                   (str dpfx (if f lst tee))
-                                   c))
-                  chs flg-last))))))
+  (->> tree
+       (w/postwalk #(if (vector? %) (split-lone-ch %) %))
+       (get-prefixes ()) 
+       (map unwind-prefix)))
 
 (comment
-  (let [input ["/h/l/a" "/h/l/b" "/h/l/c" "/h/w/p" "/h/w/q" "/h/w/q/r"]]
-    (->> input sort (reduce add-path []) 
-         (w/postwalk #(if (vector? %) (split-lone-ch %) %))
-         (lines<-tree**)))
-  (let [input ["/h"] #_["/h/a" "/h/a/b" "/h/a/b/c"]]
-    (->> input sort (reduce add-path []) 
-         (w/postwalk #(if (vector? %) (split-lone-ch %) %))
-         (lines<-tree** ))))
+  (let [input ["/h/l/a" "/h/l/b" "/h/l/c" "/h/w/p" "/h/w/q" "/h/w/q/r" "/h/w/q/s" "/h/w/y"]]
+    (->> input sort (reduce add-path []) lines<-tree))
+  (let [input ["/h/a" "/h/a/b" "/h/a/b/c"]]
+    (->> input sort (reduce add-path []) lines<-tree))
+  
+  (let [input ["/hello/alpha/charlie/file2.txt"
+                 "/hello/alpha/charlie/file10.txt"
+                 "/hello/alpha/Epsilon"
+                 "/hello/alpha/delta"
+                 "/hello/alpha/bravo"
+                 "/hello/alpha/charlie/file1.txt"]]
+    (->> input sort (reduce add-path []) lines<-tree)))
 
 (defn unwrap-quotes [s]
   (if (and (str/starts-with? s "\"") (str/ends-with? s "\""))
@@ -149,5 +148,5 @@
                          (filter seq)
                          sort
                          (reduce add-path [])
-                         lines<-tree**)]
+                         lines<-tree)]
             (println (str/join x))))))))
