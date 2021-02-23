@@ -8,14 +8,14 @@
    `tree` command. Includes options to control sorting and to specify the path
    separator.
 
-:section To Do's
+:section ToDo's
 
-   [] (2020-07-27) Use `let-not`
-      Use wevre.let-not in the cli processing.
+   [] Create tests for the various command-line options.
 
 :section Learnings
 
-   * uberjar needs the main class compiled first, clj -e "(compile
-   wevre.pptree.main)".
+   * uberjar needs the main class compiled first
+   ```
+      clj -e "(compile 'wevre.pptree.main)".
 
    * for clj to compile, the `classes` directory needs to exist.

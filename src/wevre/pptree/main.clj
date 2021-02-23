@@ -12,14 +12,14 @@
 (def ^:dynamic *lex-sort* false)
 
 (defn split-last 
-  "Split a path at final sep."
+  "Split path at final *sep*."
   [s]
   (if-let [i (str/last-index-of s *sep*)]
     (map str/join (split-at (inc i) s))
     (list "" s)))
 
-(defn get-prefix
-  "Return common prefix ending with sep."
+(defn common-prefix
+  "Return common prefix ending with *sep*."
   [a b]
   (->> (map vector a b)
        (take-while (partial apply =))
@@ -29,7 +29,7 @@
        (first)))
 
 (defprotocol Prefixed
-  "Items (paths or trees) that contain a prefix."
+  "Items (paths or trees) that contain a removable prefix."
   (deprefix [val pfx]))
 
 (extend-protocol Prefixed
@@ -39,39 +39,24 @@
   (deprefix [val pfx] (update val 0 #(str/replace-first % pfx ""))))
 
 (defn add-path
-  "Add str `path` to vec `tree` and return a new tree.
-   Paths must be added in sorted order. Uses recursion."
+  "Recursively add str `path` to vec `tree` and return new tree vector.
+   Paths must be added in sorted order."
   [[par & _ :as tree] path]
-  (let [pfx (get-prefix par path) de-path (deprefix path pfx)]
+  (let [pfx (common-prefix par path) de-path (deprefix path pfx)]
     (cond
+      ; Initialize empty tree.
       (empty? tree) [path]
+      ; Place par and path as siblings under new parent.
       (pos? (compare par pfx)) [pfx (deprefix tree pfx) [de-path]]
-      (= path pfx) tree   ;; Ignore duplicate directories.
-      (or (= 1 (count tree)) (empty? (get-prefix (first (peek tree)) de-path)))
-      (conj tree [de-path])   ;; Add path as (newest) last child.
-      :else   ;; Recursively add path to (existing) last child.
+      ; Ignore duplicate directories
+      (= path pfx) tree
+      ; Add path as last child.
+      (or (= 1 (count tree)) 
+          (empty? (common-prefix (first (peek tree)) de-path)))
+      (conj tree [de-path])
+      ; Recursively add path to last child.
+      :else
       (conj (pop tree) (add-path (peek tree) de-path)))))
-
-(defn add-path*
-  "Add str `path` to vec `tree` and return a new tree.
-   Paths must be added in sorted order. Uses loop/recur."
-  [tree path]
-  (->> 
-   ;; `pars` is an 'inside-out' stack of trees without their youngest child.
-   ;; When the loop bottoms out, we'll recombine the first item in `pars` as the
-   ;; last child of the second item, that will become the last child of the 
-   ;; third and so on.
-   (loop [[par & _ :as tree] tree pars [] path path]
-     (let [pfx (get-prefix par path) de-path (deprefix path pfx)]
-       (cond
-         (empty? tree) (cons [path] pars)
-         (pos? (compare par pfx)) (cons [pfx (deprefix tree pfx) [de-path]] pars)
-         (= path pfx) (cons tree pars)   ;; Ignore duplicate directories.
-         (or (= 1 (count tree)) (empty? (get-prefix (first (peek tree)) de-path)))
-         (cons (conj tree [de-path]) pars)   ;; Add path as (newest) last child.
-         :else   ;; Add path to (existing) last child.
-         (recur (peek tree) (cons (pop tree) pars) de-path))))
-    (reduce #(conj %2 %1))))
 
 (def spa "    ")
 (def bra "│   ")
@@ -103,21 +88,19 @@
   (let [[head tail] (split-last par)]
     (if (and (empty? chs) (seq head) (seq tail)) [head [tail]] tree)))
 
-(defn tree->lines
+(defn lines<-tree
   [tree]
   (letfn [(do-childs
            [result pfx [ch & chs]]
            (let [pfx-curr (conj pfx (if (empty? chs) lst tee))
                  pfx-desc (conj pfx (if (empty? chs) spa bra))]
-             (if ch
-               (do-childs (do-branch result pfx-curr pfx-desc ch) pfx chs)
-               result)))
+             (cond
+               (nil? ch) result
+               :else (do-childs (do-branch result pfx-curr pfx-desc ch) pfx chs))))
           (do-branch
            [result pfx-par pfx-chs [par & chs]]
-           (->> chs
-                (map split-lone-ch)
-                (sort-chs)
-                (do-childs (conj result (conj pfx-par par)) pfx-chs)))]
+           (let [chs (sort-chs (map split-lone-ch chs))]
+             (do-childs (conj result (conj pfx-par par)) pfx-chs chs)))]
     (when (first tree) (do-branch [] [] [] tree))))
 
 (defn unwrap-quotes [s]
@@ -139,7 +122,7 @@
                          (map str/trim)
                          (map unwrap-quotes)
                          (filter seq)
-                         (sort)
+                         sort
                          (reduce add-path [])
-                         (tree->lines))]
+                         lines<-tree)]
             (println (str/join x))))))))

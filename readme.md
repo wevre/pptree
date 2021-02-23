@@ -46,11 +46,10 @@ to get the following output
 └── file10.txt
 ```
 
-Also, try running `pptree` on this file
+Also, try running `pptree` using the contents of this file as input
 
 ```
-resources/
-└── test2.txt
+pptree < resources/test2.txt
 ```
 
 and checking out the command line options: `-h`, `-l`, `-F`, `-f`, `-I`.
