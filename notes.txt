@@ -8,14 +8,47 @@
    `tree` command. Includes options to control sorting and to specify the path
    separator.
 
+:section Status
+
+   2021-02-24
+      Today I implemented logic to go from tree to lines (which is all about
+      figuring out what prefix you need in front of each path) using zippers.
+      The beauty of zippers is I don't have to do recursion. I have a sequence
+      of zipper locations, and at each one I can use other zipper functions
+      (like checking who is to the left, right, and up) to determine what the
+      prefixes need to be. Pretty cool.
+
+   2021-02-23
+      I rebuilt the `add-path` logic, splitting it into two modes:
+      "insert-down", for when we are trying to add a path to a tree, and the
+      important thing we are checking here is if the path and the tree need to
+      be joined up as siblings under a shared parent (which would have a shorter
+      root than the original tree in question); and "insert-across" where we are
+      traversing the children to find where this path fits as a sibling, or, if
+      we find a sub-tree and this path belongs inside it, then we go back to
+      insert-down mode.
+
+      The older version did not have these two distinct modes, because we
+      pre-sorted the paths, and the logic only had to go to the last child
+      position of any tree or sub-tree. This version allows us to insert paths
+      in any order, and, even though it is a larger function, it makes more
+      sense to me what it is doing.
+
+      Now having written the above, I'm seeing my original wisdom in pre-sorting
+      the paths, because the logic to handle that is definitely simpler, so
+      maybe I'll go back. First, thought, I want to take another stab (I've had
+      a few aborted attempts) to implement the add-path logic using a zipper.
+
 :section ToDo's
 
-   [] I'm looking at `lines<-tree` and I'm thinking two things: (1) the mutual
-   recursion could probably be "unwound" back to single recursion--sort of what
-   to do that just to see what it would look like and if it would make the code
-   easier to grok at a glance; and, (2) I still want to try for some elegant
-   code using zippers. I've made some stabs at it, but each time, partway
-   through, I started to feel like the code was getting more hairy.
+   [] I'm thinking of using a bespoke map to represent a node. It could have
+   keys :root and :childs and custom zipper logic to handle it. That's one thing
+   that is slightly odd about my current code: you have to _know_ that the first
+   element of the node is the root, and all the rest are childs, and all the
+   code that deals with it has to dance around that. With a map, we would be
+   more explicit. And the `add-path` method could be `add-node` and start right
+   off with a map, so there is no conversion back and forth between strings and
+   seqs.
 
 :section Learnings
 

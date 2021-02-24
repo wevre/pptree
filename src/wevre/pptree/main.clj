@@ -140,13 +140,48 @@
 (defn prefixes<-lasts [lasts]
   (map-indexed (fn [i l] (if (zero? i) (if l lst tee) (if l spa bra))) lasts))
 
+(defn lines<-tree
+  "Return seq of printable lines from given tree. Sort or split Tree should be 
+   sorted and any lone directories split."
+  [tree]
+  (let [lasts<-loc   ; Seq of bools if each of branch+parents is "last".
+        (fn [loc]
+          (let [ups (->> (iterate z/up loc) (take-while (complement nil?)))
+                depth (dec (count ups))
+                lasts (map #(nil? (z/right %)) ups)]
+            (cond
+              (not (dir? (z/node loc))) (take depth lasts)
+              (< 1 depth) (take (dec depth) (drop 1 lasts))
+              :else ())))
+        get-line (fn [loc] (str (->> (lasts<-loc loc)
+                                     prefixes<-lasts
+                                     reverse
+                                     str/join) 
+                                (z/node loc)))]
+    (->> (z/seq-zip tree)
+         (iterate z/next)
+         (take-while (complement z/end?))
+         (filter (complement z/branch?))
+         (map get-line))))
+
 (comment
   (let [input ["/h/a" "/h/a/b" "/h/a/b/c" "/h/d"]
-        tree (->> input (reduce add-path []) (w/postwalk split) (w/postwalk #(sort-childs % sort-chs)))
+        tree (->> (reduce add-path [] input)
+                  (w/postwalk split)
+                  (w/postwalk #(sort-childs % sort-chs)))]
+    (lines<-tree tree))
+  (lines<-tree nil)
+  ;
+  )
+
+(comment
+  (let [input ["/h/a" "/h/a/b" "/h/a/b/c" "/h/d"]
+        tree (->> (reduce add-path [] input)
+                  (w/postwalk split)
+                  (w/postwalk #(sort-childs % sort-chs)))
         zipper (z/seq-zip tree)
         zseq (take-while (complement z/end?) (iterate z/next zipper))
         up-count (fn [loc] (count (take-while (complement nil?) (drop 1 (iterate z/up loc)))))
-        root? (fn [loc] (nil? (z/left loc)))
         last? (fn [loc] (nil? (->> loc z/right)))
         up-lasts (fn [loc] (map last? (take-while (complement nil?) (iterate z/up loc))))
         lasts (fn [loc]
@@ -158,33 +193,6 @@
         prefixes (fn [loc] (reverse (prefixes<-lasts (lasts loc))))]
     (prn tree)
     (map (juxt z/node prefixes) (filter (complement z/branch?) zseq)))
-  ;
-  )
-
-(defn lines<-tree
-  "Return seq of printable lines from given tree. Sort or split Tree should be sorted and any
-   lone directories split."
-  [tree]
-  (let [up-count (fn [loc] (count (take-while (complement nil?) (drop 1 (iterate z/up loc)))))
-        last? (fn [loc] (nil? (z/right loc)))
-        up-lasts (fn [loc] (map last? (take-while (complement nil?) (iterate z/up loc))))
-        get-prefixes (fn [loc] (let [depth (up-count loc)]
-                                 (cond
-                                   (not (dir? (z/node loc))) (take depth (up-lasts loc))
-                                   (< 1 depth) (take (dec depth) (drop 1 (up-lasts loc)))
-                                   :else ())))
-        get-line (fn [loc] (str (str/join (reverse (prefixes<-lasts (get-prefixes loc)))) (z/node loc)))]
-    (->> (z/seq-zip tree)
-         (iterate z/next)
-         (take-while (complement z/end?))
-         (filter (complement z/branch?))
-         (map get-line))))
-
-(comment
-  (let [input ["/h/a" "/h/a/b" "/h/a/b/c" "/h/d"]
-        tree (->> input (reduce add-path []) (w/postwalk split) (w/postwalk #(sort-childs % sort-chs)))]
-    (lines<-tree tree))
-  (lines<-tree nil)
   ;
   )
 
