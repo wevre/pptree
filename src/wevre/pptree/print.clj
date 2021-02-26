@@ -2,7 +2,6 @@
   "Methods for converting a tree into lines with line-drawing prefixes"
   (:require [clojure.string :as str]
             [wevre.pptree.tree :as t]
-            [wevre.natural-compare :refer [natural-compare]]
             [clojure.zip :as z]))
 
 (def spa "    ")
@@ -36,7 +35,7 @@
                                      reverse
                                      str/join)
                                 (:root (z/node loc))))]
-    (->> (t/zipper<-node tree)
+    (->> (t/zipper<-tree tree)
          (iterate z/next)
          (take-while (complement z/end?))
          (map get-line))))

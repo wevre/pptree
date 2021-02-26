@@ -27,19 +27,14 @@
         comp (if *lex-sort* compare natural-compare)]
     (sort-by key-fn comp childs)))
 
-(defn tree<-input [input]
+(defn tree<-input
+  "Generates tree from input lines, with sorted children."
+  [input]
   (->> input
        (map t/node<-path)
        (reduce t/add-node)
-       (w/postwalk #(if (map? %) (update % :childs sort-childs) %))))
-
-(comment
-  (let [input ["/h/a" "/h/a/b" "/h/a/b/c" "/h/d"]
-        tree (tree<-input input)]
-    (doseq [x (p/lines<-tree tree)]
-      (println x)))
-  ;
-  )
+       (w/postwalk
+        #(if (and (map? %) (:childs %)) (update % :childs sort-childs) %))))
 
 (defn unwrap-quotes [s]
   (if (and (str/starts-with? s "\"") (str/ends-with? s "\""))
@@ -56,10 +51,10 @@
                 *dirs-last* (get options :folders-last *dirs-last*)
                 *lex-sort* (get options :lexical-sort *lex-sort*)]
         (with-open [rdr (io/reader *in*)]
-          (doseq [x (->> (line-seq rdr)
-                         (map str/trim)
-                         (map unwrap-quotes)
-                         (filter seq)
-                         tree<-input
-                         p/lines<-tree)]
-            (println x)))))))
+          (let [lines (->> (line-seq rdr)
+                           (map str/trim)
+                           (map unwrap-quotes)
+                           (filter seq))]
+            (when (seq lines)
+              (doseq [x (->> lines tree<-input p/lines<-tree)]
+                (println x)))))))))
