@@ -1,7 +1,9 @@
 {:paths ["src" "classes"]
  :deps {org.clojure/clojure {:mvn/version "1.10.0"}
         org.clojure/tools.cli {:mvn/version "1.0.194"}
-        wevre/natural-compare {:mvn/version "0.0.8"}}
+        wevre/natural-compare {:mvn/version "0.0.8"}
+        org.clojure/tools.logging {:mvn/version "1.1.0"}
+        ch.qos.logback/logback-classic {:mvn/version "1.2.3"}}
  :aliases {:test {:extra-paths ["test"]}
            
            :run-tests 
