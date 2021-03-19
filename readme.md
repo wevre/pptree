@@ -1,11 +1,12 @@
 # pptree
 
 A utility for creating a tree diagram (_à la_ unix `tree` command) for arbitrary
-lists of filenames. By "arbitrary", I mean that, unlike the `tree` command, you
+lists of filenames. By 'arbitrary', I mean that, unlike the `tree` command, you
 don't have to list out all the files in a directory, you can print a tree for
 the two or three files you care about, they can be from completely different
-sub-directories, and they don't even need to be _real_ files, the input just
-needs to be strings with separators that _look_ like files.
+sub-directories, and they don't even need to _be_ real files, the input just
+needs to be strings with separators that _look_ like files, and `pptree` will
+sort them and display them in an outline showing the hierarchy.
 
 # How to install
 
@@ -39,7 +40,7 @@ pptree
 ^D
 ```
 
-Note that the lines above indicate the following steps: typing "pptree", hitting
+Note that the lines above indicate the following steps: typing 'pptree', hitting
 return, typing three file names, hitting return after each one, and then typing
 CTRL+D. This will run the `pptree` command and generate the following output:
 
@@ -84,7 +85,7 @@ something like an outline, ...something like the `tree` command! But I didn't
 want an entire directory like the `tree` command would give me, I wanted it to
 work on a list of _arbitrary_ files (see opening paragraph), plus I was on
 Windows and I didn't know if such a thing as the `tree` command even existed
-(I've since learned that yes it does, but, again, _arbitrary_) so I decided to
+(I've since learned that yes it does, but, still, _arbitrary_) so I decided to
 write my own. My first version, which I still use at work, was in Python, and
 then I later rewrote it in Clojure, which is what you are looking at now.
 
